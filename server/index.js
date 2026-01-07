@@ -1,5 +1,5 @@
 // index.js
-
+require('dd-trace').init();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');

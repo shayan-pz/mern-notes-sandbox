@@ -1,163 +1,112 @@
-📝 MERN Notes App (Dockerized Sandbox)
+📝 MERN Notes Sandbox
 
-A full-stack MERN (MongoDB, Express, React, Node.js) notes app, containerized with Docker so your team can run the entire project using just one command.
-
-GitHub Repository: https://github.com/shayan-pz/mern-notes-sandbox.git￼
+A fully containerized sandbox project built with the MERN stack (MongoDB, Express, React, Node.js) and instrumented with Datadog APM for full observability.
 
 ⸻
 
-🚀 Project Features
-	•	🧾 Add, view, and delete notes
-	•	🐳 Dockerized frontend and backend
-	•	🔐 MongoDB Atlas for cloud-based data storage
-	•	✅ Secure config handling via .env
-	•	👥 Easy to share and run as a team sandbox
+🔧 Features
+	•	Create, fetch, and delete notes
+	•	MongoDB Atlas database
+	•	React frontend and Express backend
+	•	Dockerized with docker-compose
+	•	Datadog APM (with custom port support)
+
+🔁 We are intentionally using port 8136 for Datadog APM instead of the default 8126 to avoid conflicts with the Datadog Agent already running on our work laptops.
+
+🐳 This setup runs the Datadog Agent in its own container, fully separated from the backend app. The backend sends traces over the Docker network to the agent via container name datadog-agent and port 8136.
+
+🔑 Don’t forget to insert your actual Datadog API key￼ in the docker-compose.yml under the datadog-agent service, or the agent won’t be able to send traces.
+
+⸻
+
+🚀 Setup Instructions
+
+1. Clone the repo
+
+git clone https://github.com/your-username/mern-notes-sandbox.git
+cd mern-notes-sandbox
+
+2. Create your .env file in server/
+
+MONGO_URI=your_mongodb_connection_string
+
+🔐 Never commit .env — it’s gitignored.
+
+3. Add your Datadog API key
+
+Edit the docker-compose.yml under datadog-agent service:
+
+    environment:
+      - DD_API_KEY=your_actual_api_key_here
+
+Or use an environment variable at runtime for better security.
+
+4. Start the app
+
+docker compose down
+docker compose up --build
+
+5. Trigger some requests
+
+curl http://localhost:5000/notes
+
+Or open the frontend at: http://localhost:3000￼
+
+6. View traces in Datadog
+
+👉 Datadog APM Dashboard￼
 
 ⸻
 
 📁 Project Structure
 
 mern-notes-sandbox/
-├── server/                  # Backend (Node + Express)
-│   ├── Dockerfile
-│   └── index.js, models/, routes/, ...
-│
-├── client/
-│   └── client/              # Frontend (React)
-│       ├── Dockerfile
-│       └── src/, public/, ...
-│
-├── docker-compose.yml       # Runs both frontend and backend
-├── .env                     # Contains your MongoDB URI (NOT COMMITTED)
-├── .env.example             # Template for teammates
-└── README.md                # This file
+├── server/
+│   ├── index.js
+│   ├── models/
+│   └── routes/
+├── client/client/
+│   └── App.js
+├── docker-compose.yml
+└── README.md
 
 
 ⸻
 
-🧠 Prerequisites
-	•	Install Docker Desktop￼
-	•	Get your MongoDB Atlas connection string (URI)
+🐶 Datadog APM Configuration
 
-⸻
+Backend environment variables:
 
-🛠️ Getting Started (Team Instructions)
+- DD_AGENT_HOST=datadog-agent
+- DD_TRACE_AGENT_PORT=8136
+- DD_SERVICE=mern-notes-backend
+- DD_ENV=dev
 
-1. Clone the Project
+Datadog agent environment:
 
-git clone https://github.com/shayan-pz/mern-notes-sandbox.git
-cd mern-notes-sandbox
+- DD_APM_ENABLED=true
+- DD_APM_RECEIVER_PORT=8136
 
-2. Create your .env file
+Port 8136 is exposed via:
 
-cp .env.example .env
-
-Then open .env and paste in your actual MongoDB URI:
-
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/notesapp?retryWrites=true&w=majority
-
-✅ Do not commit this file. It’s ignored via .gitignore.
-
-⸻
-
-3. Start the App with Docker
-
-docker compose up --build
-
-This will:
-	•	Build and run the backend on http://localhost:5000￼
-	•	Build and run the frontend on http://localhost:3000￼
-
-⸻
-
-🧪 Test the App
-
-Open your browser and:
-	•	Go to http://localhost:3000
-	•	Add a new note
-	•	Delete a note
-	•	Refresh the page to confirm it persists via MongoDB Atlas
-
-You can also check:
-
-curl http://localhost:5000/notes
+ports:
+  - "8136:8136"
 
 
 ⸻
 
-🐳 Docker Setup Details
+✅ Quick Setup Summary
 
-Backend: server/Dockerfile
-
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN npm install
-EXPOSE 5000
-CMD [“node”, “index.js”]
-
-Frontend: client/client/Dockerfile
-
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN npm install
-EXPOSE 3000
-CMD [“npm”, “start”]
-
-Compose File: docker-compose.yml
-
-services:
-  backend:
-    build: ./server
-    ports:
-      - “5000:5000”
-    env_file:
-      - .env
-    volumes:
-      - ./server:/app
-
-  frontend:
-    build: ./client/client
-    ports:
-      - “3000:3000”
-    volumes:
-      - ./client/client:/app
-    depends_on:
-      - backend
+require('dd-trace').init();     # First line of server/index.js
+.env with MONGO_URI             # Inside server/
+DD_API_KEY in compose file      # For datadog-agent service
+docker compose up --build      # Start everything
 
 
 ⸻
 
-🔐 .env and .env.example
+🧠 Author & Credits
 
-✅ .env.example (template to share)
+Created by Shayan Parvizi
 
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/notesapp?retryWrites=true&w=majority
-
-🔒 .env (your real credentials)
-
-MONGO_URI=mongodb+srv://notedev:yourPassword@cluster0.mongodb.net/notesapp?retryWrites=true&w=majority
-
-This file is ignored via .gitignore to keep secrets safe
-
-⸻
-
-🧹 Optional Cleanup
-	•	Remove version: from docker-compose.yml (no longer needed)
-	•	Delete unused files from React starter template
-
-⸻
-
-✅ Shutting Down
-
-To stop and clean up the containers:
-
-docker compose down
-
-
-⸻
-
-👋 Need Help?
-
-Contact the maintainer via GitHub Issues or pull requests.
+Contributions & improvements welcome!
